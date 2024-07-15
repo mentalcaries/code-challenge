@@ -18,24 +18,32 @@ def extract_carousel_images(file_path)
   carousel_content = top_carousel.at_css('div[jsname="haAclf"]')
   all_script_tags = document.css('script')
 
-  data = { "artworks" => [] }
+  extracted_data = { "artworks" => [] }
+
   carousel_content.css('a').each do |link|
 
     title = link['aria-label']
-    extensions = link.css('.ellip, .klmeta').map(&:text)
+
+    extensions = []
+    # year is available via the title attribute, but must be parsed
+    extension_year = link['title'].match(/\((\d{4})\)/) ? link['title'].match(/\((\d{4})\)/)[1] : ""
+
+    extensions << extension_year
+
     image_url = "https://www.google.com#{link['href']}"
     image = link.at_css('img')
-    image_id = nil
-    if image
-      image_id = image['id']
-    end
+    image_id = image ? image['id'] : nil
     thumbnail = nil
 
     all_script_tags.each do |script|
       match_data = script.content.match(/var\s+s\s*=\s*'([^']+)';\s*var\s+ii\s*=\s*\[\s*'#{image_id}'\s*\];/)
       if match_data
-        decoded_thumbnail = Base64.strict_encode64(Base64.decode64(match_data[1]))
-        thumbnail = decoded_thumbnail
+        decoded_image = Base64.decode64(match_data[1]['data:image/png;base64,'.length .. -1])
+        encoded_thumbnail = Base64.strict_encode64(decoded_image)
+        thumbnail = "data:image/jpeg;base64,#{encoded_thumbnail}"
+        # decoded_thumbnail = Base64.strict_encode64(Base64.decode64(match_data[1]))
+        # thumbnail = decoded_thumbnail
+        break
       end
     end
 
@@ -46,11 +54,11 @@ def extract_carousel_images(file_path)
       "image"=> thumbnail
     }
 
-    data["artworks"] << result
+    extracted_data["artworks"] << result
 
   end
 
-  formatted_json = JSON.pretty_generate(data)
+  formatted_json = JSON.pretty_generate(extracted_data)
   puts formatted_json
-  File.write('./image-parser-output.json', formatted_json)
+  File.write("./output/extracted-images-#{document.title.split.first}.json", formatted_json)
 end
