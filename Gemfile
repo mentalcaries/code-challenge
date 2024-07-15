@@ -5,3 +5,4 @@ source "https://rubygems.org"
 # gem "rails"
 gem "nokogiri"
 gem "httparty"
+gem 'rspec', '~> 3.5'
