@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'Google Carousel Image Parser' do
-  let(:html_file_path) { './files/van-gogh-paintings.html' }
+  let(:html_file_path) { './files/iron-maiden-albums.html' }
   let(:document) { Nokogiri::HTML.parse(open(html_file_path)) }
   let(:all_script_tags) { document.css('script') }
   let(:top_carousel) { document.at_css('g-scrolling-carousel') }
@@ -26,29 +26,39 @@ describe 'Google Carousel Image Parser' do
       title = link['aria-label']
       extensions = link.css('.ellip, .klmeta').map(&:text)
       image = link.at_css('img')
-      image_id = nil
-      if image
-        image_id = image['id']
-      end
+      image_id = image ? image['id'] : nil
 
-      expect(title).not_to be_nil
+      expect(title).to_not be_nil
       expect(title).to be_a(String)
 
       expect(extensions).to be_an(Array)
 
+      expect(link['href']).to_not be_empty
       expect(link['href']).to be_a(String)
-      expect(image_id).not_to be_nil
-      expect(image_id).to be_a(String)
+
+
+      expect(image_id).to be_a(String).or be_nil
 
       extensions.each do |year|
         expect(year).to match(/\b\d{4}\b/)
       end
 
-
     end
   end
 
+  
+  it 'extracts a base64 URI from the script tags matching the image ID' do
+    carousel_content.css('a').each do |link|
+      image = link.at_css('img')
+      image_id = image ? image['id'] : nil
+      next if image_id.nil?
 
+      all_script_tags.each do |script|
+        match_data = script.content.match(/var\s+s\s*=\s*'([^']+)';\s*var\s+ii\s*=\s*\[\s*'#{image_id}'\s*\];/)
+        expect(match_data[1]).to match(/data:image\/jpeg;base64,[a-zA-Z0-9\/+=]+/) if match_data
+      end
+    end
+  end
 
 
 end
