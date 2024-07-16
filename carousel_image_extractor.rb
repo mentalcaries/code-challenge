@@ -1,5 +1,4 @@
 require 'nokogiri'
-require 'httparty'
 require 'base64'
 require 'json'
 
