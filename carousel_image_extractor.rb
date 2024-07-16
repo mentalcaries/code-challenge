@@ -33,7 +33,7 @@ def extract_carousel_images(file_path)
       match_data = script.content.match(/var\s+s\s*=\s*'([^']+)';\s*var\s+ii\s*=\s*\[\s*'#{image_id}'\s*\];/)
       if match_data
         # strip off data prefix to avoid decoding/encoding
-        decoded_image = Base64.decode64(match_data[1]['data:image/png;base64,'.length .. -1])
+        decoded_image = Base64.decode64(match_data[1]['data:image/jpeg;base64,'.length .. -1])
         encoded_thumbnail = Base64.strict_encode64(decoded_image)
         # prepend data prefix to output correct format
         thumbnail = "data:image/jpeg;base64,#{encoded_thumbnail}"
