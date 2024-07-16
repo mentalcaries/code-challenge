@@ -26,7 +26,6 @@ def extract_carousel_images(file_path)
     image_url = "https://www.google.com#{link['href']}"
     image = link.at_css('img')
     image_id = image ? image['id'] : nil
-    puts image_id
     thumbnail = nil
 
     all_script_tags.each do |script|
